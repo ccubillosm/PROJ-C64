@@ -23,6 +23,7 @@ Zero Page disponible en `$02-$8F`. Screen RAM en `$0400`. Rutinas de manejo de n
 - [Lección C64P-001]: VIC-II: Screen RAM ($0400) exige códigos de pantalla (.enc screen / .enc none)
 - [Lección C64P-001]: VIC-II: Screen RAM ($0400) exige códigos de pantalla (.enc screen / .enc none)
 - [Lección C64P-001]: Prueba Docker inyector de lecciones
+- [Git Sync Validation]: Botón de Commit y Push hacia GitHub verificado y operativo.
 
 ## 6. Notas Adicionales (custom_notes)
 > **Agentes Consumidores:** Todos los agentes (PO, UXUI, ARCH, DEV, QA)
