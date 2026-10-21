@@ -18,8 +18,12 @@ Ensamblador MOS 6502/6510 utilizando la sintaxis de `64tass`. Compilación hacia
 
 ## 5. Configuraciones Técnicas (tech_configs)
 > **Agentes Consumidores:** ARCH, DEV, QA
-Zero Page disponible en `$02-$8F`. Screen RAM en `$0400`. Rutinas de manejo de números pseudoaleatorios y lógica de cartas optimizadas para ciclos de CPU limitados.
+Zero Page disponible en `$02-$8F`. Screen RAM en `$0400`. Rutinas de manejo de números pseudoaleatorios y lógica de cartas optimizadas para ciclos de CPU limitados. VIC-II Screen RAM espera Screen Codes directos (NO códigos PETSCII/ASCII). Al usar `64tass -a`, todas las cadenas de texto volcadas a Screen RAM deben encerrarse con `.enc "screen"` y `.enc "none"`. Configurar `VIC_CHARPTR` (`$D018`) con `$14` para el charset estándar mayúsculas/gráficos. Los códigos de naipes nativos de C64 son: Corazón `♥` (`$53`), Diamante `♦` (`$5A`), Trébol `♣` (`$58`), Pica `♠` (`$41`).
+- [Lección C64P-001]: VIC-II: Screen RAM ($0400) exige códigos de pantalla (.enc screen / .enc none)
+- [Lección C64P-001]: VIC-II: Screen RAM ($0400) exige códigos de pantalla (.enc screen / .enc none)
+- [Lección C64P-001]: VIC-II: Screen RAM ($0400) exige códigos de pantalla (.enc screen / .enc none)
+- [Lección C64P-001]: Prueba Docker inyector de lecciones
 
 ## 6. Notas Adicionales (custom_notes)
 > **Agentes Consumidores:** Todos los agentes (PO, UXUI, ARCH, DEV, QA)
-Asegurar compatibilidad con ciclos PAL/NTSC en VIC-II y optimizar llamadas a interrupciones IRQ de raster.
+Asegurar compatibilidad con ciclos PAL/NTSC en VIC-II y optimizar llamadas a interrupciones IRQ de raster. Para recuadros y bordes en pantalla usar códigos de línea C64 ($70 ┌, $40 ─, $6E ┐, $5D │, $6D └, $7D ┘) para evitar colisiones con PETSCII estándar.

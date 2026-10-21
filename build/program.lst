@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.60.3243 listing file
 ; 64tass -a -o /Users/acidlabs/Desktop/MultiAgente/sandboxes/PROJ-C64-POKER/build/program.prg -L /Users/acidlabs/Desktop/MultiAgente/sandboxes/PROJ-C64-POKER/build/program.lst /Users/acidlabs/Desktop/MultiAgente/sandboxes/PROJ-C64-POKER/src/main.asm
-; Tue Oct 20 22:28:23 2026
+; Tue Oct 20 22:47:40 2026
 
 ;Offset	;Hex		;Monitor	;Source
 
@@ -53,289 +53,293 @@
 .080f	ad 11 d0	lda $d011	        lda     VIC_CTRL1
 .0812	09 10		ora #$10	        ora     #$10
 .0814	8d 11 d0	sta $d011	        sta     VIC_CTRL1
-.0817	a9 00		lda #$00	        lda     #COLOR_BLACK
-.0819	8d 20 d0	sta $d020	        sta     VIC_BORDER
-.081c	a9 05		lda #$05	        lda     #COLOR_GREEN
-.081e	8d 21 d0	sta $d021	        sta     VIC_BG0
-.0821	20 53 08	jsr $0853	        jsr     CLEAR_SCREEN    ; Limpiar los 1000 bytes de pantalla con espacios
-.0824	20 75 08	jsr $0875	        jsr     INIT_DECK       ; Inicializar mazo con las 52 cartas unicas (1-52)
-.0827	20 85 08	jsr $0885	        jsr     INIT_SID_RNG    ; Inicializar generador de ruido blanco SID
-.082a	20 b5 08	jsr $08b5	        jsr     DRAW_STATIC_UI  ; Renderizar cabecera, log y panel de fichas
-.082d	58		cli		        cli                     ; Rehabilitar interrupciones
-.082e	20 93 08	jsr $0893	        jsr     SHUFFLE_DECK
-.0831	20 23 09	jsr $0923	        jsr     DRAW_CARDS
-.0834					MAIN_LOOP
-.0834	20 e4 ff	jsr $ffe4	        jsr     KEY_GETIN
-.0837	f0 fb		beq $0834	        beq     MAIN_LOOP       ; Si no hay tecla presionada, esperar
-.0839	c9 20		cmp #$20	        cmp     #$20            ; Barra espaciadora (ESPACIO = BARAJAR Y REPARTIR)
-.083b	f0 07		beq $0844	        beq     HANDLE_SPACE
-.083d	c9 d2		cmp #$d2	        cmp     #'R'            ; Tecla 'R' (RETIRAR)
-.083f	f0 0c		beq $084d	        beq     HANDLE_RETIRE
-.0841	4c 34 08	jmp $0834	        jmp     MAIN_LOOP
-.0844					HANDLE_SPACE
-.0844	20 93 08	jsr $0893	        jsr     SHUFFLE_DECK
-.0847	20 23 09	jsr $0923	        jsr     DRAW_CARDS
-.084a	4c 34 08	jmp $0834	        jmp     MAIN_LOOP
-.084d					HANDLE_RETIRE
-.084d	20 f1 09	jsr $09f1	        jsr     DRAW_RETIRE_MSG
-.0850	4c 34 08	jmp $0834	        jmp     MAIN_LOOP
-.0853					CLEAR_SCREEN
-.0853	a2 00		ldx #$00	        ldx     #$00
-.0855					CL_LOOP
-.0855	a9 20		lda #$20	        lda     #$20            ; Caracter Espacio PETSCII
-.0857	9d 00 04	sta $0400,x	        sta     SCREEN_RAM,x
-.085a	9d 00 05	sta $0500,x	        sta     SCREEN_RAM+$100,x
-.085d	9d 00 06	sta $0600,x	        sta     SCREEN_RAM+$200,x
-.0860	9d e8 06	sta $06e8,x	        sta     SCREEN_RAM+$2e8,x
-.0863	a9 05		lda #$05	        lda     #COLOR_GREEN    ; Atributo de color tapete verde
-.0865	9d 00 d8	sta $d800,x	        sta     COLOR_RAM,x
-.0868	9d 00 d9	sta $d900,x	        sta     COLOR_RAM+$100,x
-.086b	9d 00 da	sta $da00,x	        sta     COLOR_RAM+$200,x
-.086e	9d e8 da	sta $dae8,x	        sta     COLOR_RAM+$2e8,x
-.0871	e8		inx		        inx
-.0872	d0 e1		bne $0855	        bne     CL_LOOP
-.0874	60		rts		        rts
-.0875					INIT_DECK
-.0875	a2 00		ldx #$00	        ldx     #$00
-.0877					INIT_LOOP
-.0877	8a		txa		        txa
-.0878	9d 00 10	sta $1000,x	        sta     DECK_BASE,x     ; Cada posicion recibe un indice unico 0..51
-.087b	e8		inx		        inx
-.087c	e0 34		cpx #$34	        cpx     #52
-.087e	d0 f7		bne $0877	        bne     INIT_LOOP
-.0880	a9 00		lda #$00	        lda     #$00
-.0882	85 fb		sta $fb		        sta     DECK_PTR        ; Puntero de mazo en la cima
-.0884	60		rts		        rts
-.0885					INIT_SID_RNG
-.0885	a9 ff		lda #$ff	        lda     #$ff
-.0887	8d 0e d4	sta $d40e	        sta     SID_V3_FREQ_LO  ; Frecuencia maxima para fluctuacion de ruido
-.088a	8d 0f d4	sta $d40f	        sta     SID_V3_FREQ_HI
-.088d	a9 80		lda #$80	        lda     #$80            ; Modo Ruido (Noise Waveform) en Voz 3
-.088f	8d 12 d4	sta $d412	        sta     SID_CTRL
-.0892	60		rts		        rts
-.0893					SHUFFLE_DECK
-.0893	a2 33		ldx #$33	        ldx     #51
-.0895					SHUFF_LOOP
-.0895					SAMPLE_RNG
-.0895	ad 1b d4	lda $d41b	        lda     SID_NOISE
-.0898	29 3f		and #$3f	        and     #$3f            ; Rango 0..63
-.089a	c9 34		cmp #$34	        cmp     #52             ; Asegurar que cae en [0..51]
-.089c	b0 f7		bcs $0895	        bcs     SAMPLE_RNG      ; Si >= 52, volver a muestrear
-.089e	a8		tay		        tay
-.089f	bd 00 10	lda $1000,x	        lda     DECK_BASE,x
-.08a2	48		pha		        pha
-.08a3	b9 00 10	lda $1000,y	        lda     DECK_BASE,y
-.08a6	9d 00 10	sta $1000,x	        sta     DECK_BASE,x
-.08a9	68		pla		        pla
-.08aa	99 00 10	sta $1000,y	        sta     DECK_BASE,y
-.08ad	ca		dex		        dex
-.08ae	d0 e5		bne $0895	        bne     SHUFF_LOOP
-.08b0	a9 00		lda #$00	        lda     #$00
-.08b2	85 fb		sta $fb		        sta     DECK_PTR
-.08b4	60		rts		        rts
-.08b5					DRAW_STATIC_UI
-.08b5	a2 00		ldx #$00	        ldx     #0
-.08b7					HDR_LOOP
-.08b7	bd 25 0a	lda $0a25,x	        lda     STR_HEADER,x
-.08ba	f0 0d		beq $08c9	        beq     HDR_DONE
-.08bc	9d 00 04	sta $0400,x	        sta     SCREEN_RAM,x
-.08bf	a9 07		lda #$07	        lda     #COLOR_YELLOW
-.08c1	9d 00 d8	sta $d800,x	        sta     COLOR_RAM,x
-.08c4	e8		inx		        inx
-.08c5	e0 28		cpx #$28	        cpx     #40
-.08c7	d0 ee		bne $08b7	        bne     HDR_LOOP
-.08c9					HDR_DONE
-.08c9	a2 00		ldx #$00	        ldx     #0
-.08cb					DLR_LOOP
-.08cb	bd 52 0a	lda $0a52,x	        lda     STR_DEALER,x
-.08ce	f0 0b		beq $08db	        beq     DLR_DONE
-.08d0	9d 50 04	sta $0450,x	        sta     SCREEN_RAM+80,x ; Fila 2 ($0400 + 80)
-.08d3	a9 03		lda #$03	        lda     #COLOR_CYAN
-.08d5	9d 50 d8	sta $d850,x	        sta     COLOR_RAM+80,x
-.08d8	e8		inx		        inx
-.08d9	d0 f0		bne $08cb	        bne     DLR_LOOP
-.08db					DLR_DONE
-.08db	a2 00		ldx #$00	        ldx     #0
-.08dd	a9 40		lda #$40	        lda     #$40            ; Caracter linea horizontal PETSCII
-.08df					SEP1_LOOP
-.08df	9d a0 04	sta $04a0,x	        sta     SCREEN_RAM+160,x
-.08e2	a9 06		lda #$06	        lda     #COLOR_BLUE
-.08e4	9d a0 d8	sta $d8a0,x	        sta     COLOR_RAM+160,x
-.08e7	e8		inx		        inx
-.08e8	e0 28		cpx #$28	        cpx     #40
-.08ea	d0 f3		bne $08df	        bne     SEP1_LOOP
-.08ec	a2 00		ldx #$00	        ldx     #0
-.08ee					LOG_LOOP
-.08ee	bd 75 0a	lda $0a75,x	        lda     STR_LOG,x
-.08f1	f0 0b		beq $08fe	        beq     LOG_DONE
-.08f3	9d f8 06	sta $06f8,x	        sta     SCREEN_RAM+760,x ; Fila 19 ($0400 + 19*40 = $06F8)
-.08f6	a9 03		lda #$03	        lda     #COLOR_CYAN
-.08f8	9d f8 da	sta $daf8,x	        sta     COLOR_RAM+760,x
-.08fb	e8		inx		        inx
-.08fc	d0 f0		bne $08ee	        bne     LOG_LOOP
-.08fe					LOG_DONE
-.08fe	a2 00		ldx #$00	        ldx     #0
-.0900					CHIP_LOOP
-.0900	bd c7 0a	lda $0ac7,x	        lda     STR_CHIP_PANEL,x
-.0903	f0 0b		beq $0910	        beq     CHIP_DONE
-.0905	9d 98 07	sta $0798,x	        sta     SCREEN_RAM+920,x ; Fila 23 ($0400 + 23*40 = $0798)
-.0908	a9 07		lda #$07	        lda     #COLOR_YELLOW
-.090a	9d 98 db	sta $db98,x	        sta     COLOR_RAM+920,x
-.090d	e8		inx		        inx
-.090e	d0 f0		bne $0900	        bne     CHIP_LOOP
-.0910					CHIP_DONE
-.0910	a2 00		ldx #$00	        ldx     #0
-.0912					HELP_LOOP
-.0912	bd f0 0a	lda $0af0,x	        lda     STR_KBD_HELP,x
-.0915	f0 0b		beq $0922	        beq     HELP_DONE
-.0917	9d c0 07	sta $07c0,x	        sta     SCREEN_RAM+960,x ; Fila 24 ($0400 + 24*40 = $07C0)
-.091a	a9 0d		lda #$0d	        lda     #COLOR_LIGHT_GREEN
-.091c	9d c0 db	sta $dbc0,x	        sta     COLOR_RAM+960,x
-.091f	e8		inx		        inx
-.0920	d0 f0		bne $0912	        bne     HELP_LOOP
-.0922					HELP_DONE
-.0922	60		rts		        rts
-.0923					DRAW_CARDS
-.0923	a2 00		ldx #$00	        ldx     #0
-.0925					CARD_LOOP
-.0925	8e 04 0a	stx $0a04	        stx     TEMP_CARD_IDX
-.0928	bd 00 10	lda $1000,x	        lda     DECK_BASE,x     ; Indice de carta 0..51
-.092b	8d 05 0a	sta $0a05	        sta     TEMP_CARD_VAL
-.092e	20 3a 09	jsr $093a	        jsr     RENDER_SINGLE_CARD
-.0931	ae 04 0a	ldx $0a04	        ldx     TEMP_CARD_IDX
-.0934	e8		inx		        inx
-.0935	e0 05		cpx #$05	        cpx     #5
-.0937	d0 ec		bne $0925	        bne     CARD_LOOP
-.0939	60		rts		        rts
-.093a					RENDER_SINGLE_CARD
-.093a	ae 04 0a	ldx $0a04	        ldx     TEMP_CARD_IDX
-.093d	bd 0a 0a	lda $0a0a,x	        lda     CARD_COL_OFFSETS,x
-.0940	8d 06 0a	sta $0a06	        sta     TEMP_COL
-.0943	ad 05 0a	lda $0a05	        lda     TEMP_CARD_VAL
-.0946	20 e4 09	jsr $09e4	        jsr     DIVMOD13        ; A = Valor (0..12), Y = Palo (0..3)
-.0949	8d 07 0a	sta $0a07	        sta     CARD_RANK_IDX
-.094c	8c 08 0a	sty $0a08	        sty     CARD_SUIT_IDX
-.094f	c0 02		cpy #$02	        cpy     #2
-.0951	90 08		bcc $095b	        bcc     IS_RED
-.0953	a9 00		lda #$00	        lda     #COLOR_BLACK
-.0955	8d 09 0a	sta $0a09	        sta     CARD_COLOR
-.0958	4c 60 09	jmp $0960	        jmp     COLOR_READY
-.095b					IS_RED
-.095b	a9 02		lda #$02	        lda     #COLOR_RED
-.095d	8d 09 0a	sta $0a09	        sta     CARD_COLOR
-.0960					COLOR_READY
-.0960	ae 06 0a	ldx $0a06	        ldx     TEMP_COL
-.0963	a9 2b		lda #$2b	        lda     #$2b            ; '+'
-.0965	9d 18 05	sta $0518,x	        sta     SCREEN_RAM+280,x
-.0968	a9 2d		lda #$2d	        lda     #$2d            ; '-'
-.096a	9d 19 05	sta $0519,x	        sta     SCREEN_RAM+281,x
-.096d	a9 2b		lda #$2b	        lda     #$2b            ; '+'
-.096f	9d 1a 05	sta $051a,x	        sta     SCREEN_RAM+282,x
-.0972	a9 01		lda #$01	        lda     #COLOR_WHITE
-.0974	9d 18 d9	sta $d918,x	        sta     COLOR_RAM+280,x
-.0977	9d 19 d9	sta $d919,x	        sta     COLOR_RAM+281,x
-.097a	9d 1a d9	sta $d91a,x	        sta     COLOR_RAM+282,x
-.097d	a9 7c		lda #$7c	        lda     #$7c            ; '|'
-.097f	9d 40 05	sta $0540,x	        sta     SCREEN_RAM+320,x
-.0982	9d 42 05	sta $0542,x	        sta     SCREEN_RAM+322,x
-.0985	ac 07 0a	ldy $0a07	        ldy     CARD_RANK_IDX
-.0988	b9 0f 0a	lda $0a0f,y	        lda     RANK_CHARS,y
-.098b	9d 41 05	sta $0541,x	        sta     SCREEN_RAM+321,x
-.098e	a9 01		lda #$01	        lda     #COLOR_WHITE
-.0990	9d 40 d9	sta $d940,x	        sta     COLOR_RAM+320,x
-.0993	9d 42 d9	sta $d942,x	        sta     COLOR_RAM+322,x
-.0996	ad 09 0a	lda $0a09	        lda     CARD_COLOR
-.0999	9d 41 d9	sta $d941,x	        sta     COLOR_RAM+321,x
-.099c	a9 7c		lda #$7c	        lda     #$7c            ; '|'
-.099e	9d 68 05	sta $0568,x	        sta     SCREEN_RAM+360,x
-.09a1	9d 6a 05	sta $056a,x	        sta     SCREEN_RAM+362,x
-.09a4	ac 08 0a	ldy $0a08	        ldy     CARD_SUIT_IDX
-.09a7	b9 1c 0a	lda $0a1c,y	        lda     SUIT_CHARS,y
-.09aa	9d 69 05	sta $0569,x	        sta     SCREEN_RAM+361,x
-.09ad	a9 01		lda #$01	        lda     #COLOR_WHITE
-.09af	9d 68 d9	sta $d968,x	        sta     COLOR_RAM+360,x
-.09b2	9d 6a d9	sta $d96a,x	        sta     COLOR_RAM+362,x
-.09b5	ad 09 0a	lda $0a09	        lda     CARD_COLOR
-.09b8	9d 69 d9	sta $d969,x	        sta     COLOR_RAM+361,x
-.09bb	a9 2b		lda #$2b	        lda     #$2b            ; '+'
-.09bd	9d 90 05	sta $0590,x	        sta     SCREEN_RAM+400,x
-.09c0	a9 2d		lda #$2d	        lda     #$2d            ; '-'
-.09c2	9d 91 05	sta $0591,x	        sta     SCREEN_RAM+401,x
-.09c5	a9 2b		lda #$2b	        lda     #$2b            ; '+'
-.09c7	9d 92 05	sta $0592,x	        sta     SCREEN_RAM+402,x
-.09ca	a9 01		lda #$01	        lda     #COLOR_WHITE
-.09cc	9d 90 d9	sta $d990,x	        sta     COLOR_RAM+400,x
-.09cf	9d 91 d9	sta $d991,x	        sta     COLOR_RAM+401,x
-.09d2	9d 92 d9	sta $d992,x	        sta     COLOR_RAM+402,x
-.09d5	ac 04 0a	ldy $0a04	        ldy     TEMP_CARD_IDX
-.09d8	b9 20 0a	lda $0a20,y	        lda     SLOT_NUMS,y
-.09db	9d b9 05	sta $05b9,x	        sta     SCREEN_RAM+441,x
-.09de	a9 0d		lda #$0d	        lda     #COLOR_LIGHT_GREEN
-.09e0	9d b9 d9	sta $d9b9,x	        sta     COLOR_RAM+441,x
-.09e3	60		rts		        rts
-.09e4					DIVMOD13
-.09e4	a0 00		ldy #$00	        ldy     #0
-.09e6					DIV_LOOP
-.09e6	c9 0d		cmp #$0d	        cmp     #13
-.09e8	90 06		bcc $09f0	        bcc     DIV_DONE
-.09ea	e9 0d		sbc #$0d	        sbc     #13
-.09ec	c8		iny		        iny
-.09ed	4c e6 09	jmp $09e6	        jmp     DIV_LOOP
-.09f0					DIV_DONE
-.09f0	60		rts		        rts
-.09f1					DRAW_RETIRE_MSG
-.09f1	a2 00		ldx #$00	        ldx     #0
-.09f3					RET_LOOP
-.09f3	bd 9e 0a	lda $0a9e,x	        lda     STR_RETIRED,x
-.09f6	f0 0b		beq $0a03	        beq     RET_DONE
-.09f8	9d f8 06	sta $06f8,x	        sta     SCREEN_RAM+760,x ; Fila 19
-.09fb	a9 0a		lda #$0a	        lda     #COLOR_LIGHT_RED
-.09fd	9d f8 da	sta $daf8,x	        sta     COLOR_RAM+760,x
-.0a00	e8		inx		        inx
-.0a01	d0 f0		bne $09f3	        bne     RET_LOOP
-.0a03					RET_DONE
-.0a03	60		rts		        rts
->0a04	00				TEMP_CARD_IDX   .byte 0
->0a05	00				TEMP_CARD_VAL   .byte 0
->0a06	00				TEMP_COL        .byte 0
->0a07	00				CARD_RANK_IDX   .byte 0
->0a08	00				CARD_SUIT_IDX   .byte 0
->0a09	00				CARD_COLOR      .byte 0
->0a0a	04 0a 10 16 1c			CARD_COL_OFFSETS .byte 4, 10, 16, 22, 28
->0a0f	c1 32 33 34 35 36 37 38		RANK_CHARS      .text "A23456789TJQK"
->0a17	39 d4 ca d1 cb
->0a1c	c8 c4 c3 d3			SUIT_CHARS      .text "HDCS"
->0a20	31 32 33 34 35			SLOT_NUMS       .text "12345"
-.0a25					STR_HEADER
->0a25	2a 2a 2a 20 c3 36 34 20		        .text "*** C64 POKER ENGINE V1.0 - VIC-II 40X25 ***"
->0a2d	d0 cf cb c5 d2 20 c5 ce c7 c9 ce c5 20 d6 31 2e
->0a3d	30 20 2d 20 d6 c9 c3 2d c9 c9 20 34 30 d8 32 35
->0a4d	20 2a 2a 2a
->0a51	00				        .byte 0
-.0a52					STR_DEALER
->0a52	c4 c5 c1 cc c5 d2 3a 20		        .text "DEALER: APUESTA INICIAL REALIZADA."
->0a5a	c1 d0 d5 c5 d3 d4 c1 20 c9 ce c9 c3 c9 c1 cc 20
->0a6a	d2 c5 c1 cc c9 da c1 c4 c1 2e
->0a74	00				        .byte 0
-.0a75					STR_LOG
->0a75	3e 20 cd c1 ce cf 20 d2		        .text "> MANO REPARTIDA. PULSA ESPACIO / R     "
->0a7d	c5 d0 c1 d2 d4 c9 c4 c1 2e 20 d0 d5 cc d3 c1 20
->0a8d	c5 d3 d0 c1 c3 c9 cf 20 2f 20 d2 20 20 20 20 20
->0a9d	00				        .byte 0
-.0a9e					STR_RETIRED
->0a9e	3e 20 ca d5 c7 c1 c4 cf		        .text "> JUGADOR SE RETIRA. PULSA ESPACIO NUEVA"
->0aa6	d2 20 d3 c5 20 d2 c5 d4 c9 d2 c1 2e 20 d0 d5 cc
->0ab6	d3 c1 20 c5 d3 d0 c1 c3 c9 cf 20 ce d5 c5 d6 c1
->0ac6	00				        .byte 0
-.0ac7					STR_CHIP_PANEL
->0ac7	c6 c9 c3 c8 c1 d3 3a 20		        .text "FICHAS: 1000        POZO: 20            "
->0acf	31 30 30 30 20 20 20 20 20 20 20 20 d0 cf da cf
->0adf	3a 20 32 30 20 20 20 20 20 20 20 20 20 20 20 20
->0aef	00				        .byte 0
-.0af0					STR_KBD_HELP
->0af0	c5 d3 d0 c1 c3 c9 cf 3a		        .text "ESPACIO: REPARTIR       R: RETIRAR      "
->0af8	20 d2 c5 d0 c1 d2 d4 c9 d2 20 20 20 20 20 20 20
->0b08	d2 3a 20 d2 c5 d4 c9 d2 c1 d2 20 20 20 20 20 20
->0b18	00				        .byte 0
+.0817	a9 14		lda #$14	        lda     #$14
+.0819	8d 18 d0	sta $d018	        sta     VIC_CHARPTR
+.081c	a9 00		lda #$00	        lda     #COLOR_BLACK
+.081e	8d 20 d0	sta $d020	        sta     VIC_BORDER
+.0821	a9 05		lda #$05	        lda     #COLOR_GREEN
+.0823	8d 21 d0	sta $d021	        sta     VIC_BG0
+.0826	20 5c 08	jsr $085c	        jsr     CLEAR_SCREEN    ; Limpiar los 1000 bytes de pantalla con espacios
+.0829	20 7e 08	jsr $087e	        jsr     INIT_DECK       ; Inicializar mazo con las 52 cartas unicas (0..51)
+.082c	20 8e 08	jsr $088e	        jsr     INIT_SID_RNG    ; Inicializar generador de ruido blanco SID
+.082f	20 be 08	jsr $08be	        jsr     DRAW_STATIC_UI  ; Renderizar cabecera, log y panel de fichas
+.0832	58		cli		        cli                     ; Rehabilitar interrupciones
+.0833	20 9c 08	jsr $089c	        jsr     SHUFFLE_DECK
+.0836	20 2c 09	jsr $092c	        jsr     DRAW_CARDS
+.0839					MAIN_LOOP
+.0839	20 e4 ff	jsr $ffe4	        jsr     KEY_GETIN
+.083c	f0 fb		beq $0839	        beq     MAIN_LOOP       ; Si no hay tecla presionada, esperar
+.083e	c9 20		cmp #$20	        cmp     #$20            ; Barra espaciadora (ESPACIO = BARAJAR Y REPARTIR)
+.0840	f0 0b		beq $084d	        beq     HANDLE_SPACE
+.0842	c9 d2		cmp #$d2	        cmp     #'R'            ; Tecla 'R' (RETIRAR)
+.0844	f0 10		beq $0856	        beq     HANDLE_RETIRE
+.0846	c9 52		cmp #$52	        cmp     #'r'
+.0848	f0 0c		beq $0856	        beq     HANDLE_RETIRE
+.084a	4c 39 08	jmp $0839	        jmp     MAIN_LOOP
+.084d					HANDLE_SPACE
+.084d	20 9c 08	jsr $089c	        jsr     SHUFFLE_DECK
+.0850	20 2c 09	jsr $092c	        jsr     DRAW_CARDS
+.0853	4c 39 08	jmp $0839	        jmp     MAIN_LOOP
+.0856					HANDLE_RETIRE
+.0856	20 fa 09	jsr $09fa	        jsr     DRAW_RETIRE_MSG
+.0859	4c 39 08	jmp $0839	        jmp     MAIN_LOOP
+.085c					CLEAR_SCREEN
+.085c	a2 00		ldx #$00	        ldx     #$00
+.085e					CL_LOOP
+.085e	a9 20		lda #$20	        lda     #$20            ; Caracter Espacio en Screen Code ($20)
+.0860	9d 00 04	sta $0400,x	        sta     SCREEN_RAM,x
+.0863	9d 00 05	sta $0500,x	        sta     SCREEN_RAM+$100,x
+.0866	9d 00 06	sta $0600,x	        sta     SCREEN_RAM+$200,x
+.0869	9d e8 06	sta $06e8,x	        sta     SCREEN_RAM+$2e8,x
+.086c	a9 05		lda #$05	        lda     #COLOR_GREEN    ; Atributo de color tapete verde
+.086e	9d 00 d8	sta $d800,x	        sta     COLOR_RAM,x
+.0871	9d 00 d9	sta $d900,x	        sta     COLOR_RAM+$100,x
+.0874	9d 00 da	sta $da00,x	        sta     COLOR_RAM+$200,x
+.0877	9d e8 da	sta $dae8,x	        sta     COLOR_RAM+$2e8,x
+.087a	e8		inx		        inx
+.087b	d0 e1		bne $085e	        bne     CL_LOOP
+.087d	60		rts		        rts
+.087e					INIT_DECK
+.087e	a2 00		ldx #$00	        ldx     #$00
+.0880					INIT_LOOP
+.0880	8a		txa		        txa
+.0881	9d 00 10	sta $1000,x	        sta     DECK_BASE,x     ; Cada posicion recibe un indice unico 0..51
+.0884	e8		inx		        inx
+.0885	e0 34		cpx #$34	        cpx     #52
+.0887	d0 f7		bne $0880	        bne     INIT_LOOP
+.0889	a9 00		lda #$00	        lda     #$00
+.088b	85 fb		sta $fb		        sta     DECK_PTR        ; Puntero de mazo en la cima
+.088d	60		rts		        rts
+.088e					INIT_SID_RNG
+.088e	a9 ff		lda #$ff	        lda     #$ff
+.0890	8d 0e d4	sta $d40e	        sta     SID_V3_FREQ_LO  ; Frecuencia maxima para fluctuacion de ruido
+.0893	8d 0f d4	sta $d40f	        sta     SID_V3_FREQ_HI
+.0896	a9 80		lda #$80	        lda     #$80            ; Modo Ruido (Noise Waveform) en Voz 3
+.0898	8d 12 d4	sta $d412	        sta     SID_CTRL
+.089b	60		rts		        rts
+.089c					SHUFFLE_DECK
+.089c	a2 33		ldx #$33	        ldx     #51
+.089e					SHUFF_LOOP
+.089e					SAMPLE_RNG
+.089e	ad 1b d4	lda $d41b	        lda     SID_NOISE
+.08a1	29 3f		and #$3f	        and     #$3f            ; Rango 0..63
+.08a3	c9 34		cmp #$34	        cmp     #52             ; Asegurar que cae en [0..51]
+.08a5	b0 f7		bcs $089e	        bcs     SAMPLE_RNG      ; Si >= 52, volver a muestrear
+.08a7	a8		tay		        tay
+.08a8	bd 00 10	lda $1000,x	        lda     DECK_BASE,x
+.08ab	48		pha		        pha
+.08ac	b9 00 10	lda $1000,y	        lda     DECK_BASE,y
+.08af	9d 00 10	sta $1000,x	        sta     DECK_BASE,x
+.08b2	68		pla		        pla
+.08b3	99 00 10	sta $1000,y	        sta     DECK_BASE,y
+.08b6	ca		dex		        dex
+.08b7	d0 e5		bne $089e	        bne     SHUFF_LOOP
+.08b9	a9 00		lda #$00	        lda     #$00
+.08bb	85 fb		sta $fb		        sta     DECK_PTR
+.08bd	60		rts		        rts
+.08be					DRAW_STATIC_UI
+.08be	a2 00		ldx #$00	        ldx     #0
+.08c0					HDR_LOOP
+.08c0	bd 2e 0a	lda $0a2e,x	        lda     STR_HEADER,x
+.08c3	f0 0d		beq $08d2	        beq     HDR_DONE
+.08c5	9d 00 04	sta $0400,x	        sta     SCREEN_RAM,x
+.08c8	a9 07		lda #$07	        lda     #COLOR_YELLOW
+.08ca	9d 00 d8	sta $d800,x	        sta     COLOR_RAM,x
+.08cd	e8		inx		        inx
+.08ce	e0 28		cpx #$28	        cpx     #40
+.08d0	d0 ee		bne $08c0	        bne     HDR_LOOP
+.08d2					HDR_DONE
+.08d2	a2 00		ldx #$00	        ldx     #0
+.08d4					DLR_LOOP
+.08d4	bd 5b 0a	lda $0a5b,x	        lda     STR_DEALER,x
+.08d7	f0 0b		beq $08e4	        beq     DLR_DONE
+.08d9	9d 50 04	sta $0450,x	        sta     SCREEN_RAM+80,x ; Fila 2 ($0400 + 80)
+.08dc	a9 03		lda #$03	        lda     #COLOR_CYAN
+.08de	9d 50 d8	sta $d850,x	        sta     COLOR_RAM+80,x
+.08e1	e8		inx		        inx
+.08e2	d0 f0		bne $08d4	        bne     DLR_LOOP
+.08e4					DLR_DONE
+.08e4	a2 00		ldx #$00	        ldx     #0
+.08e6	a9 40		lda #$40	        lda     #$40            ; Caracter linea horizontal C64 ($40 = horizontal bar screen code)
+.08e8					SEP1_LOOP
+.08e8	9d a0 04	sta $04a0,x	        sta     SCREEN_RAM+160,x
+.08eb	a9 06		lda #$06	        lda     #COLOR_BLUE
+.08ed	9d a0 d8	sta $d8a0,x	        sta     COLOR_RAM+160,x
+.08f0	e8		inx		        inx
+.08f1	e0 28		cpx #$28	        cpx     #40
+.08f3	d0 f3		bne $08e8	        bne     SEP1_LOOP
+.08f5	a2 00		ldx #$00	        ldx     #0
+.08f7					LOG_LOOP
+.08f7	bd 7e 0a	lda $0a7e,x	        lda     STR_LOG,x
+.08fa	f0 0b		beq $0907	        beq     LOG_DONE
+.08fc	9d f8 06	sta $06f8,x	        sta     SCREEN_RAM+760,x ; Fila 19 ($0400 + 19*40 = $06F8)
+.08ff	a9 03		lda #$03	        lda     #COLOR_CYAN
+.0901	9d f8 da	sta $daf8,x	        sta     COLOR_RAM+760,x
+.0904	e8		inx		        inx
+.0905	d0 f0		bne $08f7	        bne     LOG_LOOP
+.0907					LOG_DONE
+.0907	a2 00		ldx #$00	        ldx     #0
+.0909					CHIP_LOOP
+.0909	bd d0 0a	lda $0ad0,x	        lda     STR_CHIP_PANEL,x
+.090c	f0 0b		beq $0919	        beq     CHIP_DONE
+.090e	9d 98 07	sta $0798,x	        sta     SCREEN_RAM+920,x ; Fila 23 ($0400 + 23*40 = $0798)
+.0911	a9 07		lda #$07	        lda     #COLOR_YELLOW
+.0913	9d 98 db	sta $db98,x	        sta     COLOR_RAM+920,x
+.0916	e8		inx		        inx
+.0917	d0 f0		bne $0909	        bne     CHIP_LOOP
+.0919					CHIP_DONE
+.0919	a2 00		ldx #$00	        ldx     #0
+.091b					HELP_LOOP
+.091b	bd f9 0a	lda $0af9,x	        lda     STR_KBD_HELP,x
+.091e	f0 0b		beq $092b	        beq     HELP_DONE
+.0920	9d c0 07	sta $07c0,x	        sta     SCREEN_RAM+960,x ; Fila 24 ($0400 + 24*40 = $07C0)
+.0923	a9 0d		lda #$0d	        lda     #COLOR_LIGHT_GREEN
+.0925	9d c0 db	sta $dbc0,x	        sta     COLOR_RAM+960,x
+.0928	e8		inx		        inx
+.0929	d0 f0		bne $091b	        bne     HELP_LOOP
+.092b					HELP_DONE
+.092b	60		rts		        rts
+.092c					DRAW_CARDS
+.092c	a2 00		ldx #$00	        ldx     #0
+.092e					CARD_LOOP
+.092e	8e 0d 0a	stx $0a0d	        stx     TEMP_CARD_IDX
+.0931	bd 00 10	lda $1000,x	        lda     DECK_BASE,x     ; Indice de carta 0..51
+.0934	8d 0e 0a	sta $0a0e	        sta     TEMP_CARD_VAL
+.0937	20 43 09	jsr $0943	        jsr     RENDER_SINGLE_CARD
+.093a	ae 0d 0a	ldx $0a0d	        ldx     TEMP_CARD_IDX
+.093d	e8		inx		        inx
+.093e	e0 05		cpx #$05	        cpx     #5
+.0940	d0 ec		bne $092e	        bne     CARD_LOOP
+.0942	60		rts		        rts
+.0943					RENDER_SINGLE_CARD
+.0943	ae 0d 0a	ldx $0a0d	        ldx     TEMP_CARD_IDX
+.0946	bd 13 0a	lda $0a13,x	        lda     CARD_COL_OFFSETS,x
+.0949	8d 0f 0a	sta $0a0f	        sta     TEMP_COL
+.094c	ad 0e 0a	lda $0a0e	        lda     TEMP_CARD_VAL
+.094f	20 ed 09	jsr $09ed	        jsr     DIVMOD13        ; A = Valor (0..12), Y = Palo (0..3)
+.0952	8d 10 0a	sta $0a10	        sta     CARD_RANK_IDX
+.0955	8c 11 0a	sty $0a11	        sty     CARD_SUIT_IDX
+.0958	c0 02		cpy #$02	        cpy     #2
+.095a	90 08		bcc $0964	        bcc     IS_RED
+.095c	a9 00		lda #$00	        lda     #COLOR_BLACK
+.095e	8d 12 0a	sta $0a12	        sta     CARD_COLOR
+.0961	4c 69 09	jmp $0969	        jmp     COLOR_READY
+.0964					IS_RED
+.0964	a9 02		lda #$02	        lda     #COLOR_RED
+.0966	8d 12 0a	sta $0a12	        sta     CARD_COLOR
+.0969					COLOR_READY
+.0969	ae 0f 0a	ldx $0a0f	        ldx     TEMP_COL
+.096c	a9 70		lda #$70	        lda     #$70            ; ┌
+.096e	9d 18 05	sta $0518,x	        sta     SCREEN_RAM+280,x
+.0971	a9 40		lda #$40	        lda     #$40            ; ─
+.0973	9d 19 05	sta $0519,x	        sta     SCREEN_RAM+281,x
+.0976	a9 6e		lda #$6e	        lda     #$6e            ; ┐
+.0978	9d 1a 05	sta $051a,x	        sta     SCREEN_RAM+282,x
+.097b	a9 01		lda #$01	        lda     #COLOR_WHITE
+.097d	9d 18 d9	sta $d918,x	        sta     COLOR_RAM+280,x
+.0980	9d 19 d9	sta $d919,x	        sta     COLOR_RAM+281,x
+.0983	9d 1a d9	sta $d91a,x	        sta     COLOR_RAM+282,x
+.0986	a9 5d		lda #$5d	        lda     #$5d            ; |
+.0988	9d 40 05	sta $0540,x	        sta     SCREEN_RAM+320,x
+.098b	9d 42 05	sta $0542,x	        sta     SCREEN_RAM+322,x
+.098e	ac 10 0a	ldy $0a10	        ldy     CARD_RANK_IDX
+.0991	b9 1c 0a	lda $0a1c,y	        lda     RANK_CHARS,y
+.0994	9d 41 05	sta $0541,x	        sta     SCREEN_RAM+321,x
+.0997	a9 01		lda #$01	        lda     #COLOR_WHITE
+.0999	9d 40 d9	sta $d940,x	        sta     COLOR_RAM+320,x
+.099c	9d 42 d9	sta $d942,x	        sta     COLOR_RAM+322,x
+.099f	ad 12 0a	lda $0a12	        lda     CARD_COLOR
+.09a2	9d 41 d9	sta $d941,x	        sta     COLOR_RAM+321,x ; Color especifico del palo (Rojo o Negro)
+.09a5	a9 5d		lda #$5d	        lda     #$5d            ; |
+.09a7	9d 68 05	sta $0568,x	        sta     SCREEN_RAM+360,x
+.09aa	9d 6a 05	sta $056a,x	        sta     SCREEN_RAM+362,x
+.09ad	ac 11 0a	ldy $0a11	        ldy     CARD_SUIT_IDX
+.09b0	b9 18 0a	lda $0a18,y	        lda     SUIT_CHARS,y
+.09b3	9d 69 05	sta $0569,x	        sta     SCREEN_RAM+361,x
+.09b6	a9 01		lda #$01	        lda     #COLOR_WHITE
+.09b8	9d 68 d9	sta $d968,x	        sta     COLOR_RAM+360,x
+.09bb	9d 6a d9	sta $d96a,x	        sta     COLOR_RAM+362,x
+.09be	ad 12 0a	lda $0a12	        lda     CARD_COLOR
+.09c1	9d 69 d9	sta $d969,x	        sta     COLOR_RAM+361,x ; Color del simbolo del palo
+.09c4	a9 6d		lda #$6d	        lda     #$6d            ; └
+.09c6	9d 90 05	sta $0590,x	        sta     SCREEN_RAM+400,x
+.09c9	a9 40		lda #$40	        lda     #$40            ; ─
+.09cb	9d 91 05	sta $0591,x	        sta     SCREEN_RAM+401,x
+.09ce	a9 7d		lda #$7d	        lda     #$7d            ; ┘
+.09d0	9d 92 05	sta $0592,x	        sta     SCREEN_RAM+402,x
+.09d3	a9 01		lda #$01	        lda     #COLOR_WHITE
+.09d5	9d 90 d9	sta $d990,x	        sta     COLOR_RAM+400,x
+.09d8	9d 91 d9	sta $d991,x	        sta     COLOR_RAM+401,x
+.09db	9d 92 d9	sta $d992,x	        sta     COLOR_RAM+402,x
+.09de	ac 0d 0a	ldy $0a0d	        ldy     TEMP_CARD_IDX
+.09e1	b9 29 0a	lda $0a29,y	        lda     SLOT_NUMS,y
+.09e4	9d b9 05	sta $05b9,x	        sta     SCREEN_RAM+441,x
+.09e7	a9 0d		lda #$0d	        lda     #COLOR_LIGHT_GREEN
+.09e9	9d b9 d9	sta $d9b9,x	        sta     COLOR_RAM+441,x
+.09ec	60		rts		        rts
+.09ed					DIVMOD13
+.09ed	a0 00		ldy #$00	        ldy     #0
+.09ef					DIV_LOOP
+.09ef	c9 0d		cmp #$0d	        cmp     #13
+.09f1	90 06		bcc $09f9	        bcc     DIV_DONE
+.09f3	e9 0d		sbc #$0d	        sbc     #13
+.09f5	c8		iny		        iny
+.09f6	4c ef 09	jmp $09ef	        jmp     DIV_LOOP
+.09f9					DIV_DONE
+.09f9	60		rts		        rts
+.09fa					DRAW_RETIRE_MSG
+.09fa	a2 00		ldx #$00	        ldx     #0
+.09fc					RET_LOOP
+.09fc	bd a7 0a	lda $0aa7,x	        lda     STR_RETIRED,x
+.09ff	f0 0b		beq $0a0c	        beq     RET_DONE
+.0a01	9d f8 06	sta $06f8,x	        sta     SCREEN_RAM+760,x ; Fila 19
+.0a04	a9 0a		lda #$0a	        lda     #COLOR_LIGHT_RED
+.0a06	9d f8 da	sta $daf8,x	        sta     COLOR_RAM+760,x
+.0a09	e8		inx		        inx
+.0a0a	d0 f0		bne $09fc	        bne     RET_LOOP
+.0a0c					RET_DONE
+.0a0c	60		rts		        rts
+>0a0d	00				TEMP_CARD_IDX   .byte 0
+>0a0e	00				TEMP_CARD_VAL   .byte 0
+>0a0f	00				TEMP_COL        .byte 0
+>0a10	00				CARD_RANK_IDX   .byte 0
+>0a11	00				CARD_SUIT_IDX   .byte 0
+>0a12	00				CARD_COLOR      .byte 0
+>0a13	04 0a 10 16 1c			CARD_COL_OFFSETS .byte 4, 10, 16, 22, 28
+>0a18	53 5a 58 41			SUIT_CHARS      .byte $53, $5a, $58, $41
+>0a1c	41 32 33 34 35 36 37 38		RANK_CHARS      .text "A23456789TJQK"
+>0a24	39 54 4a 51 4b
+>0a29	31 32 33 34 35			SLOT_NUMS       .text "12345"
+.0a2e					STR_HEADER
+>0a2e	2a 2a 2a 20 43 36 34 20		        .text "*** C64 POKER ENGINE V1.0 - VIC-II 40X25 ***"
+>0a36	50 4f 4b 45 52 20 45 4e 47 49 4e 45 20 56 31 2e
+>0a46	30 20 2d 20 56 49 43 2d 49 49 20 34 30 58 32 35
+>0a56	20 2a 2a 2a
+>0a5a	00				        .byte 0
+.0a5b					STR_DEALER
+>0a5b	44 45 41 4c 45 52 3a 20		        .text "DEALER: APUESTA INICIAL REALIZADA."
+>0a63	41 50 55 45 53 54 41 20 49 4e 49 43 49 41 4c 20
+>0a73	52 45 41 4c 49 5a 41 44 41 2e
+>0a7d	00				        .byte 0
+.0a7e					STR_LOG
+>0a7e	3e 20 4d 41 4e 4f 20 52		        .text "> MANO REPARTIDA. PULSA ESPACIO / R     "
+>0a86	45 50 41 52 54 49 44 41 2e 20 50 55 4c 53 41 20
+>0a96	45 53 50 41 43 49 4f 20 2f 20 52 20 20 20 20 20
+>0aa6	00				        .byte 0
+.0aa7					STR_RETIRED
+>0aa7	3e 20 4a 55 47 41 44 4f		        .text "> JUGADOR SE RETIRA. PULSA ESPACIO NUEVA"
+>0aaf	52 20 53 45 20 52 45 54 49 52 41 2e 20 50 55 4c
+>0abf	53 41 20 45 53 50 41 43 49 4f 20 4e 55 45 56 41
+>0acf	00				        .byte 0
+.0ad0					STR_CHIP_PANEL
+>0ad0	46 49 43 48 41 53 3a 20		        .text "FICHAS: 1000        POZO: 20            "
+>0ad8	31 30 30 30 20 20 20 20 20 20 20 20 50 4f 5a 4f
+>0ae8	3a 20 32 30 20 20 20 20 20 20 20 20 20 20 20 20
+>0af8	00				        .byte 0
+.0af9					STR_KBD_HELP
+>0af9	45 53 50 41 43 49 4f 3a		        .text "ESPACIO: REPARTIR       R: RETIRAR      "
+>0b01	20 52 45 50 41 52 54 49 52 20 20 20 20 20 20 20
+>0b11	52 3a 20 52 45 54 49 52 41 52 20 20 20 20 20 20
+>0b21	00				        .byte 0
 
 ;******  End of listing

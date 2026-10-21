@@ -1,12 +1,12 @@
 ; ==============================================================================
 ; PROJ-C64-POKER: Motor de Logica de Cartas y Pantalla Principal de Apuestas
 ; Target: MOS 6502 / Commodore 64
-; Assembler: 64tass
+; Assembler: 64tass (usa .enc "screen" para textos volcados a Screen RAM)
 ; Iniciativa: C64P-001
 ;
 ; Mapeo de Componentes y data-testid (UX/UI y Arquitectura):
 ; - data-testid="screen-container" : Matriz VIC-II Screen RAM ($0400-$07E7) y Color RAM ($D800-$DBE7)
-; - data-testid="status-header"    : Cabecera Fila 0 ($0400-$0427) "*** C64 POKER ENGINE v1.0 - VIC-II 40X25 ***"
+; - data-testid="status-header"    : Cabecera Fila 0 ($0400-$0427) "*** C64 POKER ENGINE V1.0 - VIC-II 40X25 ***"
 ; - data-testid="card-slot-1"      : Fila 7-11 Col 4  (Carta 1)
 ; - data-testid="card-slot-2"      : Fila 7-11 Col 10 (Carta 2)
 ; - data-testid="card-slot-3"      : Fila 7-11 Col 16 (Carta 3)
@@ -90,6 +90,11 @@ SYS_START
         ora     #$10
         sta     VIC_CTRL1
 
+        ; Configurar juego de caracteres VIC-II en Uppercase/Graphics ($14 = $1000 ROM base)
+        ; Esto asegura que los glifos de naipes (♥, ♦, ♣, ♠) y letras mayusculas coincidan exactamente
+        lda     #$14
+        sta     VIC_CHARPTR
+
         ; Configurar Borde (Negro $00) y Tapete Verde Oscuro ($05)
         lda     #COLOR_BLACK
         sta     VIC_BORDER
@@ -97,7 +102,7 @@ SYS_START
         sta     VIC_BG0
 
         jsr     CLEAR_SCREEN    ; Limpiar los 1000 bytes de pantalla con espacios
-        jsr     INIT_DECK       ; Inicializar mazo con las 52 cartas unicas (1-52)
+        jsr     INIT_DECK       ; Inicializar mazo con las 52 cartas unicas (0..51)
         jsr     INIT_SID_RNG    ; Inicializar generador de ruido blanco SID
         jsr     DRAW_STATIC_UI  ; Renderizar cabecera, log y panel de fichas
 
@@ -119,6 +124,8 @@ MAIN_LOOP
 
         cmp     #'R'            ; Tecla 'R' (RETIRAR)
         beq     HANDLE_RETIRE
+        cmp     #'r'
+        beq     HANDLE_RETIRE
 
         jmp     MAIN_LOOP
 
@@ -138,7 +145,7 @@ HANDLE_RETIRE
 CLEAR_SCREEN
         ldx     #$00
 CL_LOOP
-        lda     #$20            ; Caracter Espacio PETSCII
+        lda     #$20            ; Caracter Espacio en Screen Code ($20)
         sta     SCREEN_RAM,x
         sta     SCREEN_RAM+$100,x
         sta     SCREEN_RAM+$200,x
@@ -156,7 +163,7 @@ CL_LOOP
 
 ; ==============================================================================
 ; Rutina: Inicializar Mazo de 52 Cartas en $1000
-; Cartas unicas indexadas de 0 a 51 (Valor: bits 0-3, Palo: bits 4-5)
+; Cartas unicas indexadas de 0 a 51 (Rank: 0..12, Palo: 0..3)
 ; ==============================================================================
 INIT_DECK
         ldx     #$00
@@ -242,7 +249,7 @@ DLR_DONE
 
         ; 3. Separador (Fila 4)
         ldx     #0
-        lda     #$40            ; Caracter linea horizontal PETSCII
+        lda     #$40            ; Caracter linea horizontal C64 ($40 = horizontal bar screen code)
 SEP1_LOOP
         sta     SCREEN_RAM+160,x
         lda     #COLOR_BLUE
@@ -321,7 +328,7 @@ RENDER_SINGLE_CARD
 
         ; Determinar Color:
         ; Palos 0 (Corazones) y 1 (Diamantes) -> COLOR_RED ($02)
-        ; Palos 2 (Treboles) y 3 (Picas)      -> COLOR_BLACK ($00) o COLOR_WHITE ($01)
+        ; Palos 2 (Treboles) y 3 (Picas)      -> COLOR_BLACK ($00)
         cpy     #2
         bcc     IS_RED
         lda     #COLOR_BLACK
@@ -332,19 +339,26 @@ IS_RED
         sta     CARD_COLOR
 COLOR_READY
 
-        ; Renderizar Bloque 3x3 de la Carta
-        ; Fila 7 (Top border):  + - +
-        ; Fila 8 (Rank/Face):   | R |
-        ; Fila 9 (Suit):        | S |
-        ; Fila 10 (Bot border): + - +
+        ; Renderizar Bloque 3x3 de la Carta usando Screen Codes autenticos C64
+        ;
+        ; Esquinas y bordes PETSCII estándar en Screen Codes:
+        ; $70 = Esquina superior izquierda (┌)
+        ; $43 = Linea horizontal superior (─)
+        ; $6E = Esquina superior derecha (┐)
+        ; $5D = Linea vertical (|)
+        ; $6D = Esquina inferior izquierda (└)
+        ; $7D = Esquina inferior derecha (┘)
+        ;
+        ; O estilo ASCII estándar (+ - + y |):
+        ; '+' = $2B, '-' = $2D, '|' = $5D (en screen code $5D es la barra vertical de C64)
 
-        ; Fila 7: 7 * 40 = 280
+        ; Fila 7 (Top border): 7 * 40 = 280
         ldx     TEMP_COL
-        lda     #$2b            ; '+'
+        lda     #$70            ; ┌
         sta     SCREEN_RAM+280,x
-        lda     #$2d            ; '-'
+        lda     #$40            ; ─
         sta     SCREEN_RAM+281,x
-        lda     #$2b            ; '+'
+        lda     #$6e            ; ┐
         sta     SCREEN_RAM+282,x
 
         lda     #COLOR_WHITE
@@ -352,8 +366,8 @@ COLOR_READY
         sta     COLOR_RAM+281,x
         sta     COLOR_RAM+282,x
 
-        ; Fila 8 (Rank): 8 * 40 = 320
-        lda     #$7c            ; '|'
+        ; Fila 8 (Rank / Valor): 8 * 40 = 320
+        lda     #$5d            ; |
         sta     SCREEN_RAM+320,x
         sta     SCREEN_RAM+322,x
 
@@ -365,10 +379,10 @@ COLOR_READY
         sta     COLOR_RAM+320,x
         sta     COLOR_RAM+322,x
         lda     CARD_COLOR
-        sta     COLOR_RAM+321,x
+        sta     COLOR_RAM+321,x ; Color especifico del palo (Rojo o Negro)
 
-        ; Fila 9 (Suit): 9 * 40 = 360
-        lda     #$7c            ; '|'
+        ; Fila 9 (Suit / Palo autentico ♥, ♦, ♣, ♠): 9 * 40 = 360
+        lda     #$5d            ; |
         sta     SCREEN_RAM+360,x
         sta     SCREEN_RAM+362,x
 
@@ -380,14 +394,14 @@ COLOR_READY
         sta     COLOR_RAM+360,x
         sta     COLOR_RAM+362,x
         lda     CARD_COLOR
-        sta     COLOR_RAM+361,x
+        sta     COLOR_RAM+361,x ; Color del simbolo del palo
 
-        ; Fila 10 (Bottom): 10 * 40 = 400
-        lda     #$2b            ; '+'
+        ; Fila 10 (Bottom border): 10 * 40 = 400
+        lda     #$6d            ; └
         sta     SCREEN_RAM+400,x
-        lda     #$2d            ; '-'
+        lda     #$40            ; ─
         sta     SCREEN_RAM+401,x
-        lda     #$2b            ; '+'
+        lda     #$7d            ; ┘
         sta     SCREEN_RAM+402,x
 
         lda     #COLOR_WHITE
@@ -443,18 +457,24 @@ CARD_COLOR      .byte 0
 ; Columnas para los 5 slots de cartas (data-testid="card-slot-1" .. "card-slot-5")
 CARD_COL_OFFSETS .byte 4, 10, 16, 22, 28
 
-; Caracteres PETSCII para Ranks: A, 2, 3, 4, 5, 6, 7, 8, 9, T, J, Q, K
-RANK_CHARS      .text "A23456789TJQK"
+; Caracteres de Palos en Screen Codes C64 (Uppercase/Graphics Charset):
+; Corazon  (♥) = $53
+; Diamante (♦) = $5A
+; Trebol   (♣) = $58
+; Pica     (♠) = $41
+SUIT_CHARS      .byte $53, $5a, $58, $41
 
-; Caracteres de Palos (Corazon, Diamante, Trebol, Pica)
-SUIT_CHARS      .text "HDCS"
+; ==============================================================================
+; Seccion de Cadenas y Glifos codificados con .enc "screen"
+; ==============================================================================
+    .enc "screen"
+
+; Ranks: A, 2, 3, 4, 5, 6, 7, 8, 9, T, J, Q, K
+RANK_CHARS      .text "A23456789TJQK"
 
 ; Numeros de slots
 SLOT_NUMS       .text "12345"
 
-; ==============================================================================
-; Cadenas de Texto PETSCII
-; ==============================================================================
 STR_HEADER
         .text "*** C64 POKER ENGINE V1.0 - VIC-II 40X25 ***"
         .byte 0
@@ -478,3 +498,5 @@ STR_CHIP_PANEL
 STR_KBD_HELP
         .text "ESPACIO: REPARTIR       R: RETIRAR      "
         .byte 0
+
+    .enc "none"
