@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C64 Poker - VIC-II UX/UI Prototype (Estudio 360°)</title>
+    <style>
+        :root {
+            --c64-black: #000000;
+            --c64-white: #ffffff;
+            --c64-red: #880000;
+            --c64-cyan: #00aaaa;
+            --c64-purple: #880088;
+            --c64-green: #008800;
+            --c64-blue: #0000aa;
+            --c64-yellow: #cccc00;
+            --c64-orange: #884400;
+            --c64-brown: #663300;
+            --c64-light-red: #ff7777;
+            --c64-dark-grey: #333333;
+            --c64-medium-grey: #777777;
+            --c64-light-green: #00ff00;
+            --c64-light-blue: #7777ff;
+            --c64-light-grey: #bbbbbb;
+            --vic-border: #333333;
+            --vic-screen: #005500; /* Verde oscuro tapete */
+        }
+
+        body {
+            background-color: #121212;
+            color: var(--c64-light-grey);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .notice-banner {
+            background-color: #ff3333;
+            color: #ffffff;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #990000;
+            letter-spacing: 1px;
+        }
+
+        .c64-monitor {
+            background-color: var(--vic-border);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+            border: 4px solid #444;
+        }
+
+        .screen-container {
+            background-color: var(--vic-screen);
+            width: 640px;
+            height: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+            border: 8px solid var(--c64-blue);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: repeat(25, 1fr);
+            grid-template-columns: repeat(40, 1fr);
+        }
+
+        /* Simulación de scanlines estilo CRT */
+        .screen-container::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .c64-row {
+            grid-column: 1 / 41;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: bold;
+            letter-spacing: 2px;
+            white-space: pre;
+        }
+
+        /* Clases de Color VIC-II para Texto */
+        .col-white { color: var(--c64-white); text-shadow: 0 0 3px var(--c64-white); }
+        .col-red { color: var(--c64-light-red); text-shadow: 0 0 3px var(--c64-red); }
+        .col-cyan { color: var(--c64-cyan); text-shadow: 0 0 3px var(--c64-cyan); }
+        .col-yellow { color: var(--c64-yellow); text-shadow: 0 0 3px var(--c64-yellow); }
+        .col-green { color: var(--c64-light-green); text-shadow: 0 0 3px var(--c64-green); }
+        .col-blue { color: var(--c64-light-blue); text-shadow: 0 0 3px var(--c64-blue); }
+
+        .specs-panel {
+            margin-top: 20px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            width: 640px;
+            box-sizing: border-box;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .specs-panel h3 {
+            margin: 0 0 10px 0;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="notice-banner" data-testid="notice-banner">
+        ⚠️ PREVISUALIZACIÓN ESTUDIO 360° — CÓDIGO FINAL 100% MOS 6502 ASSEMBLY / C (PROHIBIDO HTML/JS EN PRODUCCIÓN)
+    </div>
+
+    <div class="c64-monitor">
+        <div class="screen-container" data-testid="screen-container">
+            
+            <!-- Fila 0: Cabecera -->
+            <div class="c64-row col-yellow" data-testid="status-header">*** C64 POKER ENGINE v1.0 - VIC-II 40X25 ***</div>
+            
+            <!-- Fila 1: Vacía -->
+            <div class="c64-row"></div>
+
+            <!-- Filas 2-4: Dealer / Mesa -->
+            <div class="c64-row col-cyan">DEALER: APUESTA INICIAL REALIZADA.</div>
+            <div class="c64-row col-white">ESTADO DEL MAZO: 47 CARTAS RESTANTES</div>
+            <div class="c64-row">----------------------------------------</div>
+
+            <!-- Filas 5-13: Representación gráfica de cartas (3x3 celdas por carta) -->
+            <div class="c64-row col-white" data-testid="card-slot-1">+---+ +---+ +---+ +---+ +---+</div>
+            <div class="c64-row col-white" data-testid="card-slot-2">| A | |10 | | Q | | K | | J |</div>
+            <div class="c64-row col-red"   data-testid="card-slot-3">| ♥ | | ♦ | | ♣ | | ♠ | | ♥ |</div>
+            <div class="c64-row col-white" data-testid="card-slot-4">|   | |   | |   | |   | |   |</div>
+            <div class="c64-row col-white" data-testid="card-slot-5">+---+ +---+ +---+ +---+ +---+</div>
+            <div class="c64-row col-green">  1     2     3     4     5   </div>
+
+            <!-- Fila 14-18: Espacio de juego -->
+            <div class="c64-row"></div>
+            <div class="c64-row col-yellow">MANO ACTUAL: FULL HOUSE (VALOR: $0E)</div>
+            <div class="c64-row"></div>
+
+            <!-- Filas 19-21: Terminal Log -->
+            <div class="c64-row col-cyan" data-testid="terminal-log">> ESPERANDO ENTRADA DE JUGADOR...</div>
+            <div class="c64-row col-white">> PULSA [1-5] PARA SELECCIONAR CARTAS</div>
+            <div class="c64-row col-white">> PULSA [SPACE] PARA REPARTIR / [R] RETIRAR</div>
+
+            <!-- Fila 22: Separador -->
+            <div class="c64-row">----------------------------------------</div>
+
+            <!-- Fila 23-24: Panel de Fichas -->
+            <div class="c64-row col-yellow" data-testid="chip-panel">FICHAS: $1,250.00    APUESTA: $50.00</div>
+            <div class="c64-row col-green" data-testid="kbd-help">PC: $080E  |  IRQ: SYNC  |  SID: ACTIVE</div>
+
+        </div>
+    </div>
+
+    <div class="specs-panel">
+        <h3>ESPECIFICACIONES TÉCNICAS VIC-II</h3>
+        <div>Screen RAM: $0400-$07E7 | Color RAM: $D800-$DBE7 | Background ($D021): $05 (Verde Oscuro)</div>
+        <div>Charset UDG: $2000 | Entropía RNG: $D41B (SID Noise Register)</div>
+    </div>
+
+</body>
+</html>
