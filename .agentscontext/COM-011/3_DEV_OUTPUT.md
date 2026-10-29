@@ -50,3 +50,4 @@ Se implementó de forma completa y nativa el juego del Gato (Tres en Raya / Tic-
   - `tests/test_c64_build.py` (4/4 PASSED)
   - `tests/test_c64p_001.py` (6/6 PASSED)
   - `tests/test_tictactoe_com011.py` (5/5 PASSED)
+

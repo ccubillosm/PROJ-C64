@@ -64,3 +64,4 @@ Lee `./PROJECT_CONTEXT.md` y los contratos en `.agentscontext/COM-011/`. Debes e
 3. **Realiza la auditoría línea por línea (Estilo CodeRabbit)** sobre los archivos implementados en `./`.
 4. **Genera el archivo `.agentscontext/COM-011/4_QA_REPORT.json`** respetando estrictamente el esquema JSON oficial y un resumen legible en `.agentscontext/COM-011/QA_REPORT.txt`.
    - **Regla de Oro:** Si al menos 1 test falla o si cualquier DoD activo incumple un requisito, `overall_status` DEBE ser `"REJECTED"`.
+
